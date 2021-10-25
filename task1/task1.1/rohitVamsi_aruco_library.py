@@ -151,4 +151,16 @@ def mark_ArUco(img,Detected_ArUco_markers,ArUco_marker_angles):
 
 	return img
 
+'''
+for testing:
+while True:
+	ret, frame = cap.read()
+	if cv.waitKey(1) & 0xFF == 27:
+		break
+	Detected_ArUco_markers = detect_ArUco(frame)									## detecting ArUco ids and returning ArUco dictionary
+	angle = Calculate_orientation_in_degree(Detected_ArUco_markers)				## finding orientation of aruco with respective to the menitoned scale in problem statement
+	img = mark_ArUco(frame,Detected_ArUco_markers,angle)						## marking the parameters of aruco which are mentioned in the problem statement
+	cv.imshow(img)
+'''
+
 
