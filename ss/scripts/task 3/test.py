@@ -288,9 +288,11 @@ def main():
         for setPoint in setPoints:
 
             print(setPoint)
-            SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, False)
+            scan = False
             if setPoint == scanPoint:
-                SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, True)
+                scan = True
+                
+            SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, scan)
 
         offboardControl.LandDrone()
         break
