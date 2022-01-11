@@ -34,9 +34,11 @@ This node publishes and subsribes the following topics:
 '''
 import cv2 as cv
 import numpy as np
+
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 import rospy
+import cv2.aruco as aruco
 from geometry_msgs.msg import *
 from mavros_msgs.msg import *
 from mavros_msgs.srv import *
@@ -173,7 +175,6 @@ class ArucoDetectInfo:
 # Function to publish the setpoint coordinates in localPosPublisher channel at rate frequency
 # This function also waits until the drone reaches the setpoint.
 def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, scan):
-
     offset = 0.3
     pos = PoseStamped()
     pos.pose.position.x = setPoint[0]
@@ -181,12 +182,16 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
     pos.pose.position.z = setPoint[2]
 
     setPt = np.array(setPoint)
+    print("Sending Drone to setpoint", end=' ')
+    print(setPoint)
     while True:
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
         if scan:
             if arucoDetect.detectedAruco:
+                print("Aruco Detected")
+                break
                 offboardControl.LandDrone()
                 stateMonitor.WaitForLanding()
                 if stateMonitor.gripperCheck == 'True':
@@ -296,6 +301,7 @@ if __name__ == '__main__':
         main()
     except rospy.ROSInterruptException:
         pass
+
 
 
 # # Land the drone at boxPickup and activate gripper if the box is in the allowed range
