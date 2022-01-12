@@ -150,15 +150,28 @@ class StateMonitor:
 class ArucoDetectInfo:
     def __init__(self):
         self.detectedAruco = False
+        self.id = 0
         self.img = np.empty([]) # This will contain your image frame from camera
         self.bridge = CvBridge()
+        self.center = (0, 0)
+
+    def FindCenter(self, box):
+        topLeft = int(box[0][0][0]), int(box[0][0][1])
+        bottomRight = int(box[0][2][0]), int(box[0][2][1])
+
+		# coordinates of the center of the bounding box of aruco marker
+        center_x = int((topLeft[0] + bottomRight[0]) / 2)
+        center_y = int((topLeft[1] + bottomRight[1]) / 2)
+
+        self.center = (center_x, center_y)
 
     def ProcessImage(self):
         imgGray = cv.cvtColor(self.img, cv.COLOR_BGR2GRAY)
         arucoDict = aruco.Dictionary_get(aruco.DICT_5X5_250)
         bboxes, ids, rejected = aruco.detectMarkers(imgGray,arucoDict)  # returns a list bounding boxes of aruco markers and a list of their respective ids
-
         if len(bboxes) != 0:     #check if any aruco markers are detected
+            self.FindCenter(bboxes[0])
+            self.id = ids[0]
             return True;
         return False;
 
@@ -188,7 +201,9 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
-        print(arucoDetect.detectedAruco)
+        if arucoDetect.detectedAruco:
+            print("Aruco with aruco id " + arucoDetect.id + " Detected")
+            print(arucoDetect.center)
         localPosPublisher.publish(pos)
         rate.sleep()
 
