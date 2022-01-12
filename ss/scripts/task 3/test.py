@@ -185,6 +185,16 @@ class ArucoDetectInfo:
             return
 
 
+def CalculateOffsetPosAruco(coord):
+    alpha = 0.2
+    x = coord[0]
+    y = coord[1]
+    Dc = math.sqrt(pow((x - 200), 2) + pow((y - 200), 2))
+    angle = math.radians(Dc * alpha)
+    Dw = 3 * math.sin(angle)
+    return Dw
+
+
 # Function to publish the setpoint coordinates in localPosPublisher channel at rate frequency
 # This function also waits until the drone reaches the setpoint.
 def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, scan):
@@ -198,18 +208,21 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
     while True:
         print("Sending Drone to setpoint", end=' ')
         print(setPoint)
-	localPosPublisher.publish(pos)
-        rate.sleep()
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
         if arucoDetect.detectedAruco:
-	    x_coord = stateMonitor.droneInfo.position.x
+            x_coord = stateMonitor.droneInfo.position.x
             y_coord = stateMonitor.droneInfo.position.y
             print(x_coord, y_coord)
             print("Aruco with aruco id " + arucoDetect.id + " Detected")
             print(arucoDetect.center)
-        
+            new_x = x_coord + CalculateOffsetPosAruco(arucoDetect.center)
+            newSetPoint = [new_x, 0, 0]
+            SendDroneToSetpoint(newSetPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, False)
+            break
+        localPosPublisher.publish(pos)
+        rate.sleep()
 
     print(f"Reached setpoint {setPoint}")
 
