@@ -188,18 +188,7 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
-        if scan:
-            if arucoDetect.detectedAruco:
-                print("Aruco Detected")
-                break
-                offboardControl.LandDrone()
-                stateMonitor.WaitForLanding()
-                if stateMonitor.gripperCheck == 'True':
-                    offboardControl.ActivateGripper(True)
-                    time.sleep(2.0) # Wait for the drone to activate the gripper
-            # newSetPoint = [stateMonitor.droneInfo.position.x, stateMonitor.droneInfo.position.y, 3]
-            # SendDroneToSetpoint(newSetPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, scan)
-
+        print(arucoDetect.detectedAruco)
         localPosPublisher.publish(pos)
         rate.sleep()
 
