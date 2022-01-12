@@ -182,9 +182,9 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
     pos.pose.position.z = setPoint[2]
 
     setPt = np.array(setPoint)
-    print("Sending Drone to setpoint", end=' ')
-    print(setPoint)
     while True:
+        print("Sending Drone to setpoint", end=' ')
+        print(setPoint)
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
@@ -273,15 +273,7 @@ def main():
 
         boxPickedUp = False
 
-        # Iterate over all the setpoints
-        for setPoint in setPoints:
-
-            print(setPoint)
-            scan = False
-            if setPoint == scanPoint:
-                scan = True
-                
-            SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, scan)
+        SendDroneToSetpoint(scanPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, True)
 
         offboardControl.LandDrone()
         break
