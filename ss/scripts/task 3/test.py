@@ -216,7 +216,7 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
                 x_coord = stateMonitor.droneInfo.position.x
                 y_coord = stateMonitor.droneInfo.position.y
                 print(x_coord, y_coord)
-                print("Aruco with aruco id " + arucoDetect.id + " Detected")
+                print("Aruco with aruco id " + str(arucoDetect.id) + " Detected")
                 print(arucoDetect.center)
                 new_x = x_coord + CalculateOffsetPosAruco(arucoDetect.center)
                 newSetPoint = [new_x, 0, 0]
