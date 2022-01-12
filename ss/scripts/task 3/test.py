@@ -211,16 +211,17 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
         if stateMonitor.ReachedSetpoint(setPt, offset):
             time.sleep(2.0)   # Wait 2 seconds for the drone to settle in the setpoint.
             break
-        if arucoDetect.detectedAruco:
-            x_coord = stateMonitor.droneInfo.position.x
-            y_coord = stateMonitor.droneInfo.position.y
-            print(x_coord, y_coord)
-            print("Aruco with aruco id " + arucoDetect.id + " Detected")
-            print(arucoDetect.center)
-            new_x = x_coord + CalculateOffsetPosAruco(arucoDetect.center)
-            newSetPoint = [new_x, 0, 0]
-            SendDroneToSetpoint(newSetPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, False)
-            break
+        if scan:
+            if arucoDetect.detectedAruco:
+                x_coord = stateMonitor.droneInfo.position.x
+                y_coord = stateMonitor.droneInfo.position.y
+                print(x_coord, y_coord)
+                print("Aruco with aruco id " + arucoDetect.id + " Detected")
+                print(arucoDetect.center)
+                new_x = x_coord + CalculateOffsetPosAruco(arucoDetect.center)
+                newSetPoint = [new_x, 0, 0]
+                SendDroneToSetpoint(newSetPoint, rate, stateMonitor, localPosPublisher, offboardControl, arucoDetect, False)
+                break
         localPosPublisher.publish(pos)
         rate.sleep()
 
