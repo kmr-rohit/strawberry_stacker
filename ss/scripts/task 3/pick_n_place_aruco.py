@@ -44,7 +44,6 @@ import time
 # Publish setpoints at 200 Hz
 PUBLISH_FREQUENCY = 200
 
-
 class OffboardControl:
 
     def __init__(self):
@@ -157,6 +156,7 @@ class ArucoDetectInfo:
         self.img = np.empty([])
         self.bridge = CvBridge()
         self.center = (0, 0)
+        self.box_x = 0
 
     def FindCenter(self, box):
         topLeft = int(box[0][0][0]), int(box[0][0][1])
@@ -225,13 +225,12 @@ def SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher, offboar
                 print("Aruco with aruco id " +
                       str(arucoDetect.id) + " Detected")
                 print(arucoDetect.center)
-                new_x = x_coord + \
+                arucoDetect.box_x = x_coord + \
                     CalculateOffsetPosAruco(arucoDetect.center) + 1.15
-                newSetPoint = [new_x, 0, 3]
+                newSetPoint = [arucoDetect.box_x, 0, 3]
                 SendDroneToSetpoint(newSetPoint, rate, stateMonitor,
                                     localPosPublisher, offboardControl, arucoDetect, False)
-                SendDroneToSetpoint([new_x, 0, -0.6], rate, stateMonitor,
-                                    localPosPublisher, offboardControl, arucoDetect, False)
+                
 
                 break
         localPosPublisher.publish(pos)
@@ -329,13 +328,17 @@ def main():
 
         SendDroneToSetpoint(scanPoint, rate, stateMonitor,
                             localPosPublisher, offboardControl, arucoDetect, True)
-
         
-        if stateMonitor.gripperCheck.data == "True":
-            print("Correct gripper position")
-            offboardControl.ActivateGripper(True)
-            time.sleep(2.0)  # Wait for the drone to activate the gripper
-            boxPickedUp = True
+        boxPickedUp = False
+        
+        while not boxPickedUp:
+            SendDroneToSetpoint([arucoDetect.box_x, 0, -0.6], rate, stateMonitor,
+                                        localPosPublisher, offboardControl, arucoDetect, False)
+            if stateMonitor.gripperCheck.data == "True":
+                print("Correct gripper position")
+                offboardControl.ActivateGripper(True)
+                time.sleep(2.0)  # Wait for the drone to activate the gripper
+                boxPickedUp = True
 
         SendDroneToSetpoint(scanPoint, rate, stateMonitor,
                             localPosPublisher, offboardControl, arucoDetect, False)
