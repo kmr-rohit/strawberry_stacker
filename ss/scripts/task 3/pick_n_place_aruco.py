@@ -190,8 +190,10 @@ class ArucoDetectInfo:
             return
 
 
+#Calculation Formula From: https://answers.opencv.org/question/56744/converting-pixel-displacement-into-other-unit/
 def CalculateOffsetPosAruco(coord):
-    alpha = 0.2
+    #alpha value is calculated from horizontal FOV and dimensions of the image. HFOV = 80 deg, imag res = 400x400
+    alpha = 0.2 # alpha is the angular resolution in deg / pixel.
     x = coord[0]
     y = coord[1]
     Dc = math.sqrt(pow((x - 200), 2) + pow((y - 200), 2))
@@ -278,13 +280,10 @@ def main():
 
     # Subscribing to the camera topic
     rospy.Subscriber("/eDrone/camera/image_raw",
-                     Image, arucoDetect.ArucoCallback)
+                     =Image, arucoDetect.ArucoCallback)
 
     # Rate variable to publish at PUBLISH_FREQUENCY
     rate = rospy.Rate(PUBLISH_FREQUENCY)
-
-    # Setpoints to be covered by the drone
-    setPoints = [[0, 0, 3], [9, 0, 3]]
 
     scanPoint = [9, 0, 3]
 
@@ -322,7 +321,6 @@ def main():
 
     while not rospy.is_shutdown():
 
-        boxPickedUp = False
         SendDroneToSetpoint([0, 0, 3], rate, stateMonitor,
                             localPosPublisher, offboardControl, arucoDetect, True)
 
@@ -356,41 +354,13 @@ def main():
                             localPosPublisher, offboardControl, arucoDetect, False)
         SendDroneToSetpoint([0,0,0], rate, stateMonitor,
                             localPosPublisher, offboardControl, arucoDetect, False)
+      
+        offboardControl.LandDrone()
         break
-    offboardControl.LandDrone()
                         
-
-        
-
-        
-
 
 if __name__ == '__main__':
     try:
         main()
     except rospy.ROSInterruptException:
         pass
-
-
-# # Land the drone at boxPickup and activate gripper if the box is in the allowed range
-#             if(setPoint == boxPickup):
-#                 while not boxPickedUp:
-#                     SendDroneToSetpoint([setPoint[0], setPoint[1], -0.8], rate, stateMonitor, localPosPublisher)
-#                     stateMonitor.WaitForLanding()
-#                     time.sleep(1.0)  # Wait for the drone to settle
-#                     if stateMonitor.gripperCheck.data == "True":
-#                         print("Correct gripper position")
-#                         offboardControl.ActivateGripper(True)
-#                         time.sleep(2.0) # Wait for the drone to activate the gripper
-#                         boxPickedUp = True
-
-#                     SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher)
-
-#             #Land at the boxDropOff point and drop the box
-#             if(setPoint == boxDropOff):
-#                 SendDroneToSetpoint([setPoint[0], setPoint[1], -0.8], rate, stateMonitor, localPosPublisher)
-#                 stateMonitor.WaitForLanding()
-#                 time.sleep(2.0) # Wait for the drone to settle
-#                 offboardControl.ActivateGripper(False)  # Deactivate the gripper
-#                 print("Box Dropped at drop off point")
-#                 SendDroneToSetpoint(setPoint, rate, stateMonitor, localPosPublisher)
