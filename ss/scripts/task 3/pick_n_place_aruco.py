@@ -353,12 +353,13 @@ def main():
                             localPosPublisher, offboardControl, arucoDetect, False)
         SendDroneToSetpoint([0,0,0], rate, stateMonitor,
                             localPosPublisher, offboardControl, arucoDetect, False)
-        OffboardControl.LandDrone()
+        break
+    offboardControl.LandDrone()
                         
 
         
 
-        break
+        
 
 
 if __name__ == '__main__':
