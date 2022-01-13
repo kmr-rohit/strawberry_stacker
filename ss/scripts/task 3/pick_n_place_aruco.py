@@ -2,8 +2,8 @@
 
 '''
 e-Yantra Robotics Competition
-Task 3.1
-This python file is team SS#1377 submission for task 3.1 of e-YRC.
+Task 3.2
+This python file is team SS#1377 submission for task 3.2 of e-YRC.
 Team SS 1377
 Team members:
     Rohit Kumar
@@ -17,6 +17,7 @@ This node publishes and subsribes the following topics:
     /mavros/state
     /mavros/local_position/pose
     /gripper_check
+    /eDrone/camera/image_raw
     Publications:
     /mavros/setpoint_position/local
     /mavros/setpoint_velocity/cmd_vel
