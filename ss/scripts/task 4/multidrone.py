@@ -55,7 +55,7 @@ from std_msgs.msg import *
 import time
 
 # Publish setpoints at 200 Hz
-PUBLISH_FREQUENCY = 200
+PUBLISH_FREQUENCY = 400
 
 class OffboardControl:
 
@@ -94,7 +94,7 @@ class OffboardControl:
         try:
             # Creating a proxy service for the rosservice named /mavros/set_mode for setting the mode
             flightModeService = rospy.ServiceProxy(
-                'edrone0/mavros/set_mode', mavros_msgs.srv.SetMode)
+                '/edrone0/mavros/set_mode', mavros_msgs.srv.SetMode)
             flightModeService(custom_mode='OFFBOARD')
         except rospy.ServiceException as e:
             print("service set_mode call failed: %s. Offboard Mode could not be set." % e)
@@ -104,13 +104,13 @@ class OffboardControl:
         try:
             # Creating a proxy service for the rosservice named /mavros/set_mode for setting the mode
             flightModeService = rospy.ServiceProxy(
-                'edrone1/mavros/set_mode', mavros_msgs.srv.SetMode)
+                '/edrone1/mavros/set_mode', mavros_msgs.srv.SetMode)
             flightModeService(custom_mode='OFFBOARD')
         except rospy.ServiceException as e:
             print("service set_mode call failed: %s. Offboard Mode could not be set." % e)
 
     def LandDrone0(self):
-        rospy.wait_for_service('edrone0/mavros/cmd/land')
+        rospy.wait_for_service('/edrone0/mavros/cmd/land')
         try:
             # Creating a proxy service for the rosservice named /mavros/cmd/land for landing
             landingService = rospy.ServiceProxy(
@@ -119,7 +119,7 @@ class OffboardControl:
         except rospy.ServiceException as e:
             print("service /mavros/cmd/land call failed: %s. Drone could not land." % e)
     def LandDrone1(self):
-        rospy.wait_for_service('edrone1/mavros/cmd/land')
+        rospy.wait_for_service('/edrone1/mavros/cmd/land')
         try:
             # Creating a proxy service for the rosservice named /mavros/cmd/land for landing
             landingService = rospy.ServiceProxy(
@@ -127,6 +127,25 @@ class OffboardControl:
             landingService()
         except rospy.ServiceException as e:
             print("service /mavros/cmd/land call failed: %s. Drone could not land." % e)
+
+    def takeoffDrone0(self):
+        rospy.wait_for_service('edrone0/mavros/cmd/takeoff')
+        try:
+            # Creating a proxy service for the rosservice named /mavros/cmd/land for landing
+            landingService = rospy.ServiceProxy('edrone0/mavros/cmd/takeoff', mavros_msgs.srv.CommandTOL)
+            landingService(altitude=15.0)
+        except rospy.ServiceException as e:
+            print("service /mavros/cmd/land call failed: %s. Drone could not land." % e)
+
+    def takeoffDrone1(self):
+        rospy.wait_for_service('edrone1/mavros/cmd/takeoff')
+        try:
+            # Creating a proxy service for the rosservice named /mavros/cmd/land for landing
+            landingService = rospy.ServiceProxy('edrone1/mavros/cmd/takeoff', mavros_msgs.srv.CommandTOL)
+            landingService(altitude=15.0)
+        except rospy.ServiceException as e:
+            print("service /mavros/cmd/land call failed: %s. Drone could not land." % e)
+
 
     # Function for activating and deactivating the gripper.
     # set state=True for activating and state=False for deactivating
@@ -139,7 +158,7 @@ class OffboardControl:
             print(
                 "service activate_gripper call failed: %s. gripper could not be activated." % e)
     def ActivateGripper1(self, state):
-        rospy.wait_for_service('edrone1/activate_gripper')
+        rospy.wait_for_service('/edrone1/activate_gripper')
         try:
             gripperService = rospy.ServiceProxy('/edrone1/activate_gripper', Gripper)
             gripperService(state)
@@ -311,8 +330,11 @@ def main():
         '/edrone1/mavros/setpoint_position/local', PoseStamped, queue_size=10)
 
     # # Setpoint variable topic
-    # localVelPublisher = rospy.Publisher(
-    #     '/mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
+    localVelPublisher = rospy.Publisher(
+        '/edrone0/mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
+    
+    localVelPublisher = rospy.Publisher(
+        '/edrone1/mavros/setpoint_velocity/cmd_vel', TwistStamped, queue_size=10)
 
     # Initialize subscribers
 
@@ -326,14 +348,14 @@ def main():
                      PoseStamped, stateMonitor.LocalPosCallback)
 
     # subscriber for local velocity
-    rospy.Subscriber("edrone0/mavros/local_position/velocity",
+    rospy.Subscriber("/edrone0/mavros/local_position/velocity",
                      TwistStamped, stateMonitor.LocalVelCallback)
-    rospy.Subscriber("edrone1/mavros/local_position/velocity",
+    rospy.Subscriber("/edrone1/mavros/local_position/velocity",
                      TwistStamped, stateMonitor.LocalVelCallback)
 
     # subscriber for gripper state
-    rospy.Subscriber('/gripper_check', String, stateMonitor.GripperCallback)
-    rospy.Subscriber('/gripper_check', String, stateMonitor.GripperCallback)
+    rospy.Subscriber('/edrone0/gripper_check', String, stateMonitor.GripperCallback)
+    rospy.Subscriber('/edrone1/gripper_check', String, stateMonitor.GripperCallback)
 
     # Subscribing to the camera topic
     rospy.Subscriber("/eDrone/camera/image_raw",
@@ -365,24 +387,23 @@ def main():
     # Arming the drone
     while not stateMonitor.state.armed:
         offboardControl.SetArm0(True)  # Call the arming service
+        print("Arming the drone0")
         offboardControl.SetArm1(True)  # Call the arming service
-
-        rate.sleep()
-    print("Armed!!")
+        print("Arming the drone1")
+        rate.sleep()   
+    
 
     # Switching the state to OFFBOARD mode
     while not stateMonitor.state.mode == "OFFBOARD":
-        print(stateMonitor.state.mode)
         print("setting to offboard")
-        offboardControl.OffboardSetMode0()    # Call the offboard mode service
-        offboardControl.OffboardSetMode1()    # Call the offboard mode service
+        offboardControl.OffboardSetMode0()
+        # Call the offboard mode service
+        offboardControl.OffboardSetMode1() 
+           # Call the offboard mode service 
         rate.sleep()
     print("OFFBOARD mode activated")
 
-    while not rospy.is_shutdown():
 
-        SendDroneToSetpoint([0, 0, 3], rate, stateMonitor,
-                            localPosPublisher, offboardControl, arucoDetect, True)
 
          
 
