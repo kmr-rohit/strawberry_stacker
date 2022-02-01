@@ -53,6 +53,7 @@ from mavros_msgs.srv import *
 from gazebo_ros_link_attacher.srv import Gripper
 from std_msgs.msg import *
 import time
+import threading
 
 # Publish setpoints at 200 Hz
 PUBLISH_FREQUENCY = 400
@@ -386,22 +387,44 @@ def main():
 
     # Arming the drone
     while not stateMonitor.state.armed:
-        offboardControl.SetArm0(True)  # Call the arming service
-        print("Arming the drone0")
-        offboardControl.SetArm1(True)  # Call the arming service
-        print("Arming the drone1")
-        rate.sleep()   
+        t1 = threading.Thread(target=offboardControl.SetArm0(True))
+        t2 = threading.Thread(target=offboardControl.SetArm1(True))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        
+        # offboardControl.SetArm0(True)  # Call the arming service
+        # print("Arming the drone0")
+        # offboardControl.SetArm1(True)  # Call the arming service
+        # print("Arming the drone1")
+        # rate.sleep()   
     
 
     # Switching the state to OFFBOARD mode
     while not stateMonitor.state.mode == "OFFBOARD":
         print("setting to offboard")
-        offboardControl.OffboardSetMode0()
-        # Call the offboard mode service
-        offboardControl.OffboardSetMode1() 
-           # Call the offboard mode service 
-        rate.sleep()
+        t3 = threading.Thread(target=offboardControl.OffboardSetMode0())
+        t4= threading.Thread(target=offboardControl.OffboardSetMode1())
+        t3.start()
+        t4.start()
+        t3.join()
+        t4.join()
+        
+        
+        # offboardControl.OffboardSetMode0()
+        # # Call the offboard mode service
+        # offboardControl.OffboardSetMode1() 
+        #    # Call the offboard mode service 
+        # rate.sleep()   
     print("OFFBOARD mode activated")
+
+    # Send the setpoint position
+    SendDroneToSetpoint([10, 0, 10], rate, stateMonitor,
+                            localPosPublisher, offboardControl, arucoDetect, False)
+    
+
 
 
 
